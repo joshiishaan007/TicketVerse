@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -32,9 +33,10 @@ public class Theatre {
     @Column(nullable = true)
     private String contactNumber;
 
-    @OneToMany(mappedBy = "theatre", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "theatre", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Screen> screens;
 
+    @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;

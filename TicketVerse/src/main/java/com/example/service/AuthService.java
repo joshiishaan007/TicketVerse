@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import com.example.entity.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,32 +73,16 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse registerTheatre(TheatreRegistrationRequest request) {
-        // Check if username or email already exists
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already taken");
-        }
+    public AuthResponse registerTheatre(String username,TheatreRegistrationRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Admin user not found: " + username));
 
         // Validate theatre-specific fields
         if (request.getTheatreName() == null || request.getLocation() == null ||
                 request.getScreens() == null || request.getScreens().isEmpty()) {
             throw new RuntimeException("Theatre name, location, and at least one screen are required");
         }
-
-        // Create new user with THEATRE role
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setRole(Role.THEATRE);
-
-        user = userRepository.save(user);
 
         // Create theatre entity
         Theatre theatre = new Theatre();

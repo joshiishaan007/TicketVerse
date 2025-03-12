@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,6 +19,7 @@ public class Screen {
     @Column(nullable = true)
     private String screenType; // Regular, IMAX, 3D, etc.
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "theatre_id")
     private Theatre theatre;

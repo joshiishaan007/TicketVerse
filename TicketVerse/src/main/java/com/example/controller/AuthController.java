@@ -9,6 +9,9 @@ import com.example.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,8 +30,11 @@ public class AuthController {
     }
 
     @PostMapping("/register/theatre")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthResponse> registerTheatre(@RequestBody TheatreRegistrationRequest request) {
-        return ResponseEntity.ok(authService.registerTheatre(request));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return ResponseEntity.ok(authService.registerTheatre(username,request));
     }
 
     @PostMapping("/login")
