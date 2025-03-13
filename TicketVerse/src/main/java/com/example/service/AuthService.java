@@ -41,6 +41,9 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private ScreenService screenService;
+
     public AuthResponse register(RegisterRequest request) {
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -102,11 +105,12 @@ public class AuthService {
         final Theatre savedTheatre = theatre;
         List<Screen> screens = request.getScreens().stream()
                 .map(screenDto -> {
-                    Screen screen = new Screen();
-                    screen.setScreenName(screenDto.getScreenName());
-                    screen.setSeatingCapacity(screenDto.getSeatingCapacity());
-                    screen.setScreenType(screenDto.getScreenType());
-                    screen.setTheatre(savedTheatre);
+                    Screen screen = screenService.createScreen(savedTheatre.getId(), screenDto);
+//                    Screen screen = new Screen();
+//                    screen.setScreenName(screenDto.getScreenName());
+//                    screen.setSeatingCapacity(screenDto.getSeatingCapacity());
+//                    screen.setScreenType(screenDto.getScreenType());
+//                    screen.setTheatre(savedTheatre);
                     return screen;
                 })
                 .collect(Collectors.toList());

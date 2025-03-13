@@ -3,11 +3,14 @@ package com.example.service;
 import com.example.dto.ScreenDto;
 import com.example.dto.TheatreRegistrationRequest;
 import com.example.entity.Screen;
+import com.example.entity.Seat;
 import com.example.entity.Theatre;
 import com.example.entity.User;
 import com.example.exception.ResourceNotFoundException;
+import com.example.repository.ScreenRepository;
 import com.example.repository.TheatreRepository;
 import com.example.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,9 @@ public class TheatreService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ScreenRepository screenRepository;
 
     public List<Theatre> getAllTheatres() {
         return theatreRepository.findAll();
@@ -137,5 +143,27 @@ public class TheatreService {
                 }
             }
         }
+    }
+
+    public Map<String, List<Seat>> getSeatsByRow(Long screenId) {
+        Screen screen = screenRepository.findById(screenId)
+                .orElseThrow(() -> new EntityNotFoundException("Screen not found"));
+
+        Map<String, List<Seat>> seatsByRow = new HashMap<>();
+
+        for (Seat seat : screen.getSeats()) {
+            String rowName = seat.getRowName();
+            if (!seatsByRow.containsKey(rowName)) {
+                seatsByRow.put(rowName, new ArrayList<>());
+            }
+            seatsByRow.get(rowName).add(seat);
+        }
+
+        // Sort seats within each row by column number
+        for (List<Seat> rowSeats : seatsByRow.values()) {
+            rowSeats.sort(Comparator.comparing(Seat::getColumnNumber));
+        }
+
+        return seatsByRow;
     }
 }

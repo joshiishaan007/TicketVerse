@@ -3,6 +3,9 @@ package com.example.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "screens")
 public class Screen {
@@ -24,6 +27,35 @@ public class Screen {
     @JoinColumn(name = "theatre_id")
     private Theatre theatre;
 
+    @OneToMany(mappedBy = "screen", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Seat> seats;
+
+    @Column(nullable = false)
+    private Integer numberOfRows;
+
+    @Column(nullable = false)
+    private Integer seatsPerRow;
+
+    // Method to initialize seats for a new screen
+    public void initializeSeats() {
+        seats = new ArrayList<>();
+        char rowName = 'A';
+
+        for (int row = 0; row < numberOfRows; row++) {
+            for (int col = 1; col <= seatsPerRow; col++) {
+                Seat seat = new Seat();
+                seat.setRowName(String.valueOf(rowName));
+                seat.setColumnNumber(col);
+                seat.setSeatNumber(rowName + String.valueOf(col));
+                seat.setSeatType(SeatType.STANDARD); // Default
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seat.setScreen(this);
+                seats.add(seat);
+            }
+            rowName++;
+        }
+    }
+
     public Screen() {
     }
 
@@ -33,6 +65,30 @@ public class Screen {
         this.seatingCapacity = seatingCapacity;
         this.screenType = screenType;
         this.theatre = theatre;
+    }
+
+    public List<Seat> getSeats() {
+        return seats;
+    }
+
+    public void setSeats(List<Seat> seats) {
+        this.seats = seats;
+    }
+
+    public Integer getNumberOfRows() {
+        return numberOfRows;
+    }
+
+    public void setNumberOfRows(Integer numberOfRows) {
+        this.numberOfRows = numberOfRows;
+    }
+
+    public Integer getSeatsPerRow() {
+        return seatsPerRow;
+    }
+
+    public void setSeatsPerRow(Integer seatsPerRow) {
+        this.seatsPerRow = seatsPerRow;
     }
 
     public Long getId() {
