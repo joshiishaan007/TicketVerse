@@ -1,7 +1,9 @@
 package com.example.controller;
 
+import com.example.dto.MovieDto;
 import com.example.entity.Movie;
 import com.example.repository.MovieRepository;
+import com.example.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,9 @@ public class MovieController {
 
     @Autowired
     private MovieRepository movieRepository;
+
+    @Autowired
+    private MovieService movieService;
 
     @GetMapping
     public ResponseEntity<List<Movie>> getAllMovies() {
@@ -46,6 +51,12 @@ public class MovieController {
     @GetMapping("/upcoming")
     public ResponseEntity<List<Movie>> getUpcomingMovies() {
         return ResponseEntity.ok(movieRepository.findByReleaseDateAfter(LocalDate.now()));
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<List<MovieDto>> getCurrentlyPlayingMovies() {
+        List<MovieDto> movies = movieService.getCurrentlyPlayingMovies();
+        return ResponseEntity.ok(movies);
     }
 
     @PostMapping

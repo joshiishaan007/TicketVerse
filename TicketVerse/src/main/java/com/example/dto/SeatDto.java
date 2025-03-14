@@ -9,16 +9,28 @@ public class SeatDto {
     private int columnNumber;
     private String seatType;
     private String status;
+    private double price;
 
+    // Constructors
     public SeatDto() {
     }
 
-    public SeatDto(String seatNumber, String rowName, int columnNumber, String seatType, String status) {
+    public SeatDto(String seatNumber, String rowName, int columnNumber, String seatType, String status, double price) {
         this.seatNumber = seatNumber;
         this.rowName = rowName;
         this.columnNumber = columnNumber;
         this.seatType = seatType;
         this.status = status;
+        this.price = price;
+    }
+
+    //Getters and setters
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public String getSeatNumber() {

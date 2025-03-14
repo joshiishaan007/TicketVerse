@@ -56,6 +56,13 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getUpcomingShowtimes());
     }
 
+    @GetMapping("/by-movie-theatre")
+    public ResponseEntity<List<ShowtimeDto>> getShowtimesByMovieAndTheatre(
+            @RequestParam Long movieId, @RequestParam Long theatreId) {
+        List<ShowtimeDto> showtimes = showtimeService.getShowtimesByMovieAndTheatre(movieId, theatreId);
+        return ResponseEntity.ok(showtimes);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ShowtimeDto> createShowtime(@RequestBody CreateShowtimeRequestDto request) {

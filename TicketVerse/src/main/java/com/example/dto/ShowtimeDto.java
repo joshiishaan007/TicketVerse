@@ -18,12 +18,16 @@ public class ShowtimeDto {
     private ShowtimeStatus status;
     private Integer availableSeats;
     private Integer totalSeats;
+    private String screenType;
 
     //Constructors
     public ShowtimeDto() {
     }
 
-    public ShowtimeDto(LocalDateTime startTime, LocalDateTime endTime, Double ticketPrice, Long movieId, String movieTitle, Long screenId, String screenName, Long theatreId, String theatreName, ShowtimeStatus status, Integer availableSeats, Integer totalSeats) {
+    public ShowtimeDto(LocalDateTime startTime, LocalDateTime endTime, Double ticketPrice,
+                       Long movieId, String movieTitle, Long screenId, String screenName,
+                       Long theatreId, String theatreName, ShowtimeStatus status, Integer availableSeats,
+                       Integer totalSeats, String screenType) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.ticketPrice = ticketPrice;
@@ -36,9 +40,19 @@ public class ShowtimeDto {
         this.status = status;
         this.availableSeats = availableSeats;
         this.totalSeats = totalSeats;
+        this.screenType = screenType;
     }
 
     //Getters and setters
+
+
+    public String getScreenType() {
+        return screenType;
+    }
+
+    public void setScreenType(String screenType) {
+        this.screenType = screenType;
+    }
 
     public LocalDateTime getStartTime() {
         return startTime;

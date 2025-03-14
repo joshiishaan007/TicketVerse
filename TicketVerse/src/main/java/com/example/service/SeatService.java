@@ -4,6 +4,8 @@ import com.example.dto.SeatDto;
 import com.example.entity.*;
 import com.example.repository.ScreenRepository;
 import com.example.repository.SeatRepository;
+import com.example.repository.ShowtimeRepository;
+import com.example.repository.ShowtimeSeatRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ public class SeatService {
 
     @Autowired
     private ScreenRepository screenRepository;
+
+    @Autowired
+    private ShowtimeSeatRepository showtimeSeatRepository;
 
     public List<SeatDto> getSeatsByScreenId(Long screenId) {
         List<Seat> seats = seatRepository.findByScreenId(screenId);
@@ -47,6 +52,13 @@ public class SeatService {
         }
 
         return seatsByRow;
+    }
+
+    public List<SeatDto> getAvailableSeats(Long showtimeId) {
+        return showtimeSeatRepository.findByShowtimeIdAndStatusNot(showtimeId, SeatStatus.BOOKED)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -138,6 +150,18 @@ public class SeatService {
         dto.setColumnNumber(seat.getColumnNumber());
         dto.setSeatType(seat.getSeatType().name());
         dto.setStatus(seat.getStatus().name());
+        return dto;
+    }
+
+    private SeatDto convertToDTO(ShowtimeSeat showtimeSeat) {
+        SeatDto dto = new SeatDto();
+        Seat seat = showtimeSeat.getSeat();
+        dto.setSeatNumber(seat.getSeatNumber());
+        dto.setRowName(seat.getRowName());
+        dto.setColumnNumber(seat.getColumnNumber());
+        dto.setSeatType(seat.getSeatType().name());
+        dto.setStatus(showtimeSeat.getStatus().name());
+        dto.setPrice(showtimeSeat.getPrice());
         return dto;
     }
 

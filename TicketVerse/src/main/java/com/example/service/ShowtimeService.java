@@ -70,6 +70,14 @@ public class ShowtimeService {
                 .collect(Collectors.toList());
     }
 
+    public List<ShowtimeDto> getShowtimesByMovieAndTheatre(Long movieId, Long theatreId) {
+        LocalDateTime now = LocalDateTime.now();
+        return showtimeRepository.findByMovieIdAndScreenTheatreIdAndStartTimeAfter(movieId, theatreId, now)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public ShowtimeDto createShowtime(CreateShowtimeRequestDto request) {
         // Validate movie and screen exist
@@ -206,6 +214,7 @@ public class ShowtimeService {
         // Screen info
         dto.setScreenId(showtime.getScreen().getId());
         dto.setScreenName(showtime.getScreen().getScreenName());
+        dto.setScreenType(showtime.getScreen().getScreenType());
 
         // Theatre info
         dto.setTheatreId(showtime.getScreen().getTheatre().getId());

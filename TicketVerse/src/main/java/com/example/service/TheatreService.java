@@ -1,13 +1,12 @@
 package com.example.service;
 
 import com.example.dto.ScreenDto;
+import com.example.dto.TheatreDto;
 import com.example.dto.TheatreRegistrationRequest;
-import com.example.entity.Screen;
-import com.example.entity.Seat;
-import com.example.entity.Theatre;
-import com.example.entity.User;
+import com.example.entity.*;
 import com.example.exception.ResourceNotFoundException;
 import com.example.repository.ScreenRepository;
+import com.example.repository.ShowtimeRepository;
 import com.example.repository.TheatreRepository;
 import com.example.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TheatreService {
@@ -29,12 +30,16 @@ public class TheatreService {
     @Autowired
     private ScreenRepository screenRepository;
 
+    @Autowired
+    private ShowtimeRepository showtimeRepository;
+
     public List<Theatre> getAllTheatres() {
         return theatreRepository.findAll();
     }
 
-    public Optional<Theatre> getTheatreById(Long id) {
-        return theatreRepository.findById(id);
+    public Theatre getTheatreById(Long id) {
+        return theatreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Theatre not found with id: " + id));
     }
 
     public Theatre saveTheatre(Theatre theatre) {
@@ -166,4 +171,30 @@ public class TheatreService {
 
         return seatsByRow;
     }
+
+    public List<TheatreDto> getTheatresByMovie(Long movieId) {
+
+        // Find all showtimes for the movie
+        LocalDateTime now = LocalDateTime.now();
+        List<Showtime> showtimes = showtimeRepository.findAll().stream()
+                .filter(s -> s.getMovie().getId().equals(movieId) && s.getStartTime().isAfter(now))
+                .collect(Collectors.toList());
+
+        // Extract unique theatres
+        return showtimes.stream()
+                .map(s -> s.getScreen().getTheatre())
+                .distinct()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private TheatreDto convertToDTO(Theatre theatre) {
+        TheatreDto dto = new TheatreDto();
+        dto.setId(theatre.getId());
+        dto.setName(theatre.getName());
+        dto.setLocation(theatre.getLocation());
+        dto.setCity(theatre.getCity());
+        return dto;
+    }
+
 }

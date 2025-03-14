@@ -32,4 +32,7 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
 
     @Query("SELECT s FROM Showtime s WHERE s.startTime >= :date ORDER BY s.startTime")
     List<Showtime> findUpcomingShowtimes(@Param("date") LocalDateTime date);
+
+    List<Showtime> findByMovieIdAndScreenTheatreIdAndStartTimeAfter(
+            Long movieId, Long theatreId, LocalDateTime startTime);
 }

@@ -14,6 +14,8 @@ public interface ShowtimeSeatRepository extends JpaRepository<ShowtimeSeat, Long
 
     List<ShowtimeSeat> findByShowtimeId(Long showtimeId);
 
+    List<ShowtimeSeat> findByShowtimeIdAndStatusNot(Long showtimeId, SeatStatus status);
+
     List<ShowtimeSeat> findByShowtimeIdAndStatus(Long showtimeId, SeatStatus status);
 
     @Query("SELECT ss FROM ShowtimeSeat ss JOIN ss.seat s WHERE ss.showtime.id = :showtimeId AND s.rowName = :rowName")

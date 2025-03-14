@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.dto.ScreenDto;
 import com.example.dto.SeatDto;
+import com.example.dto.TheatreDto;
 import com.example.dto.TheatreRegistrationRequest;
 import com.example.entity.Screen;
 import com.example.entity.Seat;
@@ -42,15 +43,21 @@ public class TheatreController {
 
     @GetMapping("/{theatreId}")
     public ResponseEntity<Theatre> getTheatreById(@PathVariable Long theatreId) {
-        Optional<Theatre> theatre = theatreService.getTheatreById(theatreId);
+        Optional<Theatre> theatre = Optional.ofNullable(theatreService.getTheatreById(theatreId));
         return theatre.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/by-movie/{movieId}")
+    public ResponseEntity<List<TheatreDto>> getTheatresByMovie(@PathVariable Long movieId) {
+        List<TheatreDto> theatres = theatreService.getTheatresByMovie(movieId);
+        return ResponseEntity.ok(theatres);
     }
 
     @PatchMapping("/{theatreId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Theatre> updateTheatre(@PathVariable Long theatreId, @RequestBody TheatreRegistrationRequest theatreRegistrationRequest) {
-        Optional<Theatre> existingTheatreOptional = theatreService.getTheatreById(theatreId);
+        Optional<Theatre> existingTheatreOptional = Optional.ofNullable(theatreService.getTheatreById(theatreId));
 
         if (existingTheatreOptional.isPresent()) {
             Theatre existingTheatre = existingTheatreOptional.get();
