@@ -136,6 +136,9 @@ const Payment = () => {
   }
 
   return (
+    <>
+    <br/>
+    <br/>
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white pb-20">
       {/* Processing Overlay */}
       <AnimatePresence>
@@ -506,6 +509,7 @@ const Payment = () => {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

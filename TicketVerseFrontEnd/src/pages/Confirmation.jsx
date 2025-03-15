@@ -149,6 +149,9 @@ const Confirmation = () => {
   }
 
   return (
+    <>
+    <br/>
+    <br/>
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white relative overflow-hidden">
       {/* Confetti Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-10" />
@@ -320,6 +323,7 @@ const Confirmation = () => {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
