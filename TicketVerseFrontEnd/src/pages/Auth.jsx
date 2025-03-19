@@ -93,7 +93,7 @@ const Auth = () => {
     setRegisterError("")
 
     try {
-      await axios.post("http://localhost:8080/api/auth/signup", {
+      await axios.post("http://localhost:8080/api/auth/register", {
         username: registerForm.username,
         fullName: registerForm.fullName,
         email: registerForm.email,
