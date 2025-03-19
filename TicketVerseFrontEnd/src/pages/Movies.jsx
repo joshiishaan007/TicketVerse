@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from 'axios';
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
-    // Mock Data (Replace this with API Call when ready)
-    const mockMovies = [
-      { id: 1, title: "Movie 1", image: "/assets/movie1.jpg" },
-      { id: 2, title: "Movie 2", image: "/assets/movie2.jpg" },
-      { id: 3, title: "Movie 3", image: "/assets/movie3.jpg" },
-      { id: 4, title: "Movie 4", image: "/assets/movie4.jpg" },
-      { id: 5, title: "Movie 5", image: "/assets/movie5.jpg" },
-      { id: 6, title: "Movie 6", image: "/assets/movie6.jpg" },
-    ];
-    setMovies(mockMovies);
+    const fetchMovies = async () => {
+      // Check if user is logged in
+      const token = localStorage.getItem('jwtToken');
+      console.log(token)
+      if (!token) {
+        
+        return;
+      }
+      
+      try {
+        const response = await axios.get('http://localhost:8080/api/movies', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        console.log(response.data);
+        setMovies(response.data);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      }
+    };
+  
+    fetchMovies();
   }, []);
 
   return (
@@ -46,7 +60,7 @@ const Movies = () => {
             <Link to={`/movie/${movie.id}`} className="block">
               {/* Movie Image */}
               <motion.img 
-                src={movie.image} 
+                src={movie.posterUrl} 
                 alt={movie.title} 
                 className="w-full h-80 object-cover rounded-xl border-2 border-transparent transition-all hover:border-red-500"
                 whileHover={{ scale: 1.05 }}
