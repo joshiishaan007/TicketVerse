@@ -140,6 +140,23 @@ const Profile = () => {
 
     return () => clearTimeout(timer)
   }, [])
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    // Check if token exists in localStorage on component mount
+    const token = localStorage.getItem("jwtToken")
+    if (token) {
+      setIsAuthenticated(true)
+      // You can redirect here if needed using window.location
+    }
+  }, [])
+  // Added logout function
+  const logout = () => {
+    localStorage.removeItem("jwtToken")
+    setIsAuthenticated(false)
+    window.location.href = "/"
+  }
 
   // Handle password form changes
   const handlePasswordChange = (e) => {
@@ -545,7 +562,12 @@ const Profile = () => {
                   >
                     <div className="flex items-center gap-3">
                       <LogOut className="text-red-400" size={20} />
-                      <span>Logout</span>
+                      <button
+            onClick={logout}
+            className="py-3 px-6 bg-gradient-to-r from-red-500 to-pink-500 border-none rounded-lg text-white font-semibold cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/30"
+          >
+            Logout
+          </button>
                     </div>
                     <ChevronRight size={20} className="text-gray-400" />
                   </motion.button>

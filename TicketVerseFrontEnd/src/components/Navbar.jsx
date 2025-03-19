@@ -13,7 +13,7 @@ const Navbar = () => {
 
       {/* Navigation Links */}
       <ul className="flex gap-8 text-lg font-medium">
-        <li><Link to="/" className="hover:text-pink-400">Home</Link></li>
+        <li><Link to="/home" className="hover:text-pink-400">Home</Link></li>
         <li><Link to="/movies" className="hover:text-pink-400">Movies</Link></li>
         <li><Link to="/profile" className="hover:text-pink-400">Profile</Link></li>
         <li><Link to="/contact" className="hover:text-pink-400">Contact</Link></li>

@@ -66,10 +66,17 @@ const Auth = () => {
     setLoginError("")
 
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
-        username: loginForm.username,
-        password: loginForm.password
-      })
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/login",
+        {
+          username: loginForm.username,
+          password: loginForm.password
+        },
+        {
+          withCredentials: true
+        }
+      );
+      console.log(response);
 
       // Store JWT token in localStorage
       localStorage.setItem("jwtToken", response.data.token)
@@ -78,7 +85,7 @@ const Auth = () => {
       setIsAuthenticated(true)
       
       // Redirect to home page or dashboard
-      window.location.href = "/dashboard"
+      window.location.href = "/home"
     } catch (error) {
       setLoginError(error.response?.data?.message || "Login failed. Please check your credentials.")
     } finally {
