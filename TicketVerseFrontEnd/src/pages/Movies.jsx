@@ -10,9 +10,7 @@ const Movies = () => {
     const fetchMovies = async () => {
       // Check if user is logged in
       const token = localStorage.getItem('jwtToken');
-      console.log(token)
       if (!token) {
-        
         return;
       }
       

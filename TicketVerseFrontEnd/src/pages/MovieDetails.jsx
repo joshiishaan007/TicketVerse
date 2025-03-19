@@ -4,61 +4,172 @@ import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Star, Clock, Calendar, Users, Film, MapPin, Building } from "lucide-react"
+import axios from 'axios'
 
 const MovieDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [movie, setMovie] = useState(null)
+  const [theatres, setTheatres] = useState([])
+  const [showtimes, setShowtimes] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTheater, setSelectedTheater] = useState(null)
   const [selectedTime, setSelectedTime] = useState("")
+  const [error, setError] = useState(null)
+
+//   const processTheatersWithShowtimes = (movieData, theatresData) => {
+//   // Create theaters array with showtimes for this movie
+//   if (!movieData.showtimes || movieData.showtimes.length === 0) return [];
+
+//   return theatresData.map(theatre => {
+//     // Find if this theatre has showtimes for this movie
+//     const theatreShowtimes = movieData.showtimes.filter(
+//       showtime => showtime.theatreId === theatre.id
+//     );
+
+//     // Format showtimes as strings (e.g., "10:30 AM")
+//     const formattedShowtimes = theatreShowtimes.map(showtime => {
+//       const time = new Date(showtime.startTime).toLocaleTimeString([], {
+//         hour: '2-digit',
+//         minute: '2-digit'
+//       });
+//       return time;
+//     });
+
+//     // Only include theaters that have showtimes for this movie
+//     if (formattedShowtimes.length === 0) {
+//       return null; // We'll filter these out later
+//     }
+
+//     return {
+//       id: theatre.id,
+//       name: theatre.name,
+//       location: `${theatre.address}, ${theatre.city}`,
+//       distance: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)} miles away`,
+//       showTimings: formattedShowtimes // Only use actual showtimes from the database
+//     };
+//   }).filter(Boolean); // Remove null entries (theaters without showtimes)
+// };
+
+  // Format duration from "PT2H28M" to "2h 28m"
+  const formatDuration = (duration) => {
+    if (!duration) return "2h 30m"; // Default fallback
+    
+    const hours = duration.match(/(\d+)H/);
+    const minutes = duration.match(/(\d+)M/);
+    
+    return `${hours ? hours[1] + 'h' : ''} ${minutes ? minutes[1] + 'm' : ''}`.trim();
+  };
+
+  // Format genres from string to array
+  const formatGenres = (genreString) => {
+    if (!genreString) return ["Drama", "Adventure"]; // Default fallback
+    return genreString.split(',').map(g => g.trim());
+  };
 
   useEffect(() => {
-    // Simulate API call with setTimeout
-    const timer = setTimeout(() => {
-      // Mock data - replace with actual API call
-      const mockMovie = {
-        id: Number.parseInt(id),
-        title: `Movie ${id}`,
-        image: `/assets/movie${id}.jpg`,
-        backdrop: `/assets/backdrop${id}.jpg`,
-        genre: ["Action", "Adventure", "Sci-Fi"],
-        releaseDate: "October 15, 2023",
-        duration: "2h 35m",
-        imdbRating: 8.7,
-        userRating: 4.5,
-        synopsis:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.",
-        theaters: [
-          {
-            id: 1,
-            name: "Cineplex Downtown",
-            location: "123 Main Street, Downtown",
-            distance: "2.5 miles away",
-            showTimings: ["10:00 AM", "1:30 PM", "4:45 PM", "8:00 PM"],
-          },
-          {
-            id: 2,
-            name: "MovieMax Central",
-            location: "456 Park Avenue, Central District",
-            distance: "4.1 miles away",
-            showTimings: ["11:15 AM", "2:30 PM", "5:45 PM", "9:00 PM", "11:30 PM"],
-          },
-          {
-            id: 3,
-            name: "Starplex Cinema",
-            location: "789 Broadway, Westside",
-            distance: "1.8 miles away",
-            showTimings: ["10:30 AM", "1:00 PM", "3:30 PM", "6:00 PM", "8:30 PM"],
-          },
-        ],
+    setLoading(true);
+    const token = localStorage.getItem('jwtToken');
+    
+    const fetchData = async () => {
+      try {
+        // Fetch movie data
+        const movieResponse = await axios.get(`http://localhost:8080/api/movies/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        // Fetch theatre data
+        const theatreResponse = await axios.get('http://localhost:8080/api/theatres', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        // Fetch showtimes for each theatre
+        const theatersWithShowtimes = await fetchShowtimesForTheaters(theatreResponse.data, movieResponse.data.id, token);
+        
+        // Process movie data with fallbacks for missing properties
+        const processedMovie = {
+          id: movieResponse.data.id,
+          title: movieResponse.data.title,
+          image: movieResponse.data.posterUrl || 'https://via.placeholder.com/300x450?text=Movie+Poster',
+          backdrop: movieResponse.data.posterUrl || 'https://via.placeholder.com/1920x1080?text=Movie+Backdrop',
+          genre: formatGenres(movieResponse.data.genre),
+          releaseDate: new Date(movieResponse.data.releaseDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          duration: formatDuration(movieResponse.data.duration),
+          imdbRating: 8.5, // Hardcoded fallback
+          userRating: 4.2, // Hardcoded fallback
+          synopsis: movieResponse.data.description || "No synopsis available.",
+          theaters: theatersWithShowtimes
+        };
+        
+        setMovie(processedMovie);
+        setTheatres(theatreResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load movie data. Please try again later.');
+      } finally {
+        setLoading(false);
       }
-      setMovie(mockMovie)
-      setLoading(false)
-    }, 1000)
+    };
+    
+    fetchData();
+  }, [id]);
 
-    return () => clearTimeout(timer)
-  }, [id])
+  // New function to fetch showtimes for each theatre
+const fetchShowtimesForTheaters = async (theatres, movieId, token) => {
+  const theatersWithShowtimes = await Promise.all(
+    theatres.map(async (theatre) => {
+      try {
+        // Call your getShowtimeByTheatre endpoint
+        const showtimeResponse = await axios.get(`http://localhost:8080/api/showtimes/theatre/${theatre.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        // Filter showtimes for the current movie
+        const movieShowtimes = showtimeResponse.data.filter(
+          showtime => showtime.movieId === movieId
+        );
+        
+        // Format showtimes as strings
+        const formattedShowtimes = movieShowtimes.map(showtime => {
+          const time = new Date(showtime.startTime).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          return time;
+        });
+        
+        // Only include theaters that have showtimes for this movie
+        if (formattedShowtimes.length === 0) {
+          return null; // We'll filter these out later
+        }
+        
+        return {
+          id: theatre.id,
+          name: theatre.name,
+          location: `${theatre.address}, ${theatre.city}`,
+          distance: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)} miles away`,
+          showTimings: formattedShowtimes
+        };
+      } catch (error) {
+        console.error(`Error fetching showtimes for theatre ${theatre.id}:`, error);
+        return null; // Skip this theatre if there's an error
+      }
+    })
+  );
+  
+  // Filter out null entries (theaters without showtimes or with errors)
+  return theatersWithShowtimes.filter(Boolean);
+};
 
   const handleBookTickets = () => {
     if (selectedTheater && selectedTime) {
@@ -81,6 +192,23 @@ const MovieDetails = () => {
         >
           Loading movie details...
         </motion.div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black">
+        <div className="text-white text-xl">
+          <p className="text-red-500 font-bold mb-4">Error:</p>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
@@ -199,60 +327,66 @@ const MovieDetails = () => {
                 Available Theaters
               </h2>
               <div className="space-y-4">
-                {movie.theaters.map((theater) => (
-                  <motion.div
-                    key={theater.id}
-                    whileHover={{ scale: 1.01 }}
-                    onClick={() => setSelectedTheater(theater)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                      selectedTheater?.id === theater.id
-                        ? "bg-red-500 bg-opacity-20 border-red-500"
-                        : "bg-gray-800 bg-opacity-40 border-gray-700 hover:bg-opacity-60"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-bold text-lg">{theater.name}</h3>
-                        <div className="flex items-center gap-1 text-gray-300 text-sm">
-                          <MapPin size={14} className="text-red-400" />
-                          <span>{theater.location}</span>
+                {movie.theaters && movie.theaters.length > 0 ? (
+                  movie.theaters.map((theater) => (
+                    <motion.div
+                      key={theater.id}
+                      whileHover={{ scale: 1.01 }}
+                      onClick={() => setSelectedTheater(theater)}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                        selectedTheater?.id === theater.id
+                          ? "bg-red-500 bg-opacity-20 border-red-500"
+                          : "bg-gray-800 bg-opacity-40 border-gray-700 hover:bg-opacity-60"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-bold text-lg">{theater.name}</h3>
+                          <div className="flex items-center gap-1 text-gray-300 text-sm">
+                            <MapPin size={14} className="text-red-400" />
+                            <span>{theater.location}</span>
+                          </div>
                         </div>
+                        <span className="text-sm text-gray-300">{theater.distance}</span>
                       </div>
-                      <span className="text-sm text-gray-300">{theater.distance}</span>
-                    </div>
 
-                    {selectedTheater?.id === theater.id && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 pt-4 border-t border-gray-700"
-                      >
-                        <h4 className="font-medium mb-2 text-sm">Available Show Times:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {theater.showTimings.map((time, index) => (
-                            <motion.button
-                              key={index}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedTime(time)
-                              }}
-                              className={`py-1 px-3 rounded-full text-sm transition-all ${
-                                selectedTime === time
-                                  ? "bg-red-500 text-white"
-                                  : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                              }`}
-                            >
-                              {time}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                ))}
+                      {selectedTheater?.id === theater.id && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-4 pt-4 border-t border-gray-700"
+                        >
+                          <h4 className="font-medium mb-2 text-sm">Available Show Times:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {theater.showTimings.map((time, index) => (
+                              <motion.button
+                                key={index}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedTime(time)
+                                }}
+                                className={`py-1 px-3 rounded-full text-sm transition-all ${
+                                  selectedTime === time
+                                    ? "bg-red-500 text-white"
+                                    : "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                                }`}
+                              >
+                                {time}
+                              </motion.button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="p-4 bg-gray-800 bg-opacity-40 rounded-xl border border-gray-700 text-center">
+                    <p className="text-gray-300">No theaters available for this movie.</p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -333,4 +467,3 @@ const MovieDetails = () => {
 }
 
 export default MovieDetails
-
