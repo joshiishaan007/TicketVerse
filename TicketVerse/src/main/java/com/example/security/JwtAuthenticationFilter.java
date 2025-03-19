@@ -1,6 +1,5 @@
 package com.example.security;
 
-import com.example.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +25,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private  UserDetailsService userDetailsService;
 
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
+//    @Autowired
+//    private TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -46,11 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        // Check if token is blacklisted early
-        if (tokenBlacklistService.isBlacklisted(jwt)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+//        // Check if token is blacklisted early
+//        if (tokenBlacklistService.isBlacklisted(jwt)) {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            return;
+//        }
 
         username = jwtService.extractUsername(jwt);
 
