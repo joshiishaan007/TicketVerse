@@ -15,41 +15,8 @@ const MovieDetails = () => {
   const [loading, setLoading] = useState(true)
   const [selectedTheater, setSelectedTheater] = useState(null)
   const [selectedTime, setSelectedTime] = useState("")
+  const [selectedDate, setSelectedDate] = useState("")
   const [error, setError] = useState(null)
-
-//   const processTheatersWithShowtimes = (movieData, theatresData) => {
-//   // Create theaters array with showtimes for this movie
-//   if (!movieData.showtimes || movieData.showtimes.length === 0) return [];
-
-//   return theatresData.map(theatre => {
-//     // Find if this theatre has showtimes for this movie
-//     const theatreShowtimes = movieData.showtimes.filter(
-//       showtime => showtime.theatreId === theatre.id
-//     );
-
-//     // Format showtimes as strings (e.g., "10:30 AM")
-//     const formattedShowtimes = theatreShowtimes.map(showtime => {
-//       const time = new Date(showtime.startTime).toLocaleTimeString([], {
-//         hour: '2-digit',
-//         minute: '2-digit'
-//       });
-//       return time;
-//     });
-
-//     // Only include theaters that have showtimes for this movie
-//     if (formattedShowtimes.length === 0) {
-//       return null; // We'll filter these out later
-//     }
-
-//     return {
-//       id: theatre.id,
-//       name: theatre.name,
-//       location: `${theatre.address}, ${theatre.city}`,
-//       distance: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)} miles away`,
-//       showTimings: formattedShowtimes // Only use actual showtimes from the database
-//     };
-//   }).filter(Boolean); // Remove null entries (theaters without showtimes)
-// };
 
   // Format duration from "PT2H28M" to "2h 28m"
   const formatDuration = (duration) => {
@@ -122,64 +89,130 @@ const MovieDetails = () => {
     fetchData();
   }, [id]);
 
-  // New function to fetch showtimes for each theatre
-const fetchShowtimesForTheaters = async (theatres, movieId, token) => {
-  const theatersWithShowtimes = await Promise.all(
-    theatres.map(async (theatre) => {
-      try {
-        // Call your getShowtimeByTheatre endpoint
-        const showtimeResponse = await axios.get(`http://localhost:8080/api/showtimes/theatre/${theatre.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        // Filter showtimes for the current movie
-        const movieShowtimes = showtimeResponse.data.filter(
-          showtime => showtime.movieId === movieId
-        );
-        
-        // Format showtimes as strings
-        const formattedShowtimes = movieShowtimes.map(showtime => {
-          const time = new Date(showtime.startTime).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
+  // Updated function to fetch showtimes for each theatre
+  const fetchShowtimesForTheaters = async (theatres, movieId, token) => {
+    const theatersWithShowtimes = await Promise.all(
+      theatres.map(async (theatre) => {
+        try {
+          // Call your getShowtimeByTheatre endpoint
+          const showtimeResponse = await axios.get(`http://localhost:8080/api/showtimes/theatre/${theatre.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           });
-          return time;
-        });
-        
-        // Only include theaters that have showtimes for this movie
-        if (formattedShowtimes.length === 0) {
-          return null; // We'll filter these out later
+          
+          // Filter showtimes for the current movie
+          const movieShowtimes = showtimeResponse.data.filter(
+            showtime => showtime.movieId === movieId
+          );
+          
+          // Format showtimes with both date and time
+          const formattedShowtimes = movieShowtimes.map(showtime => {
+            const showtimeDate = new Date(showtime.startTime);
+            return {
+              id: showtime.id,
+              fullDateTime: showtimeDate,
+              date: showtimeDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+              }),
+              time: showtimeDate.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              // Store the full datetime string for navigation
+              dateTimeString: showtimeDate.toISOString()
+            };
+          });
+          
+          // Only include theaters that have showtimes for this movie
+          if (formattedShowtimes.length === 0) {
+            return null; // We'll filter these out later
+          }
+
+          setShowtimes(movieShowtimes)
+          
+          return {
+            id: theatre.id,
+            name: theatre.name,
+            location: `${theatre.address}, ${theatre.city}`,
+            distance: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)} miles away`,
+            showTimings: formattedShowtimes
+          };
+        } catch (error) {
+          console.error(`Error fetching showtimes for theatre ${theatre.id}:`, error);
+          return null; // Skip this theatre if there's an error
         }
-        
-        return {
-          id: theatre.id,
-          name: theatre.name,
-          location: `${theatre.address}, ${theatre.city}`,
-          distance: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 9)} miles away`,
-          showTimings: formattedShowtimes
-        };
-      } catch (error) {
-        console.error(`Error fetching showtimes for theatre ${theatre.id}:`, error);
-        return null; // Skip this theatre if there's an error
-      }
-    })
-  );
-  
-  // Filter out null entries (theaters without showtimes or with errors)
-  return theatersWithShowtimes.filter(Boolean);
-};
+      })
+    );
+    
+    // Filter out null entries (theaters without showtimes or with errors)
+    return theatersWithShowtimes.filter(Boolean);
+  };
 
   const handleBookTickets = () => {
-    if (selectedTheater && selectedTime) {
-      navigate(`/seat-selection?movieId=${id}&theaterId=${selectedTheater.id}&time=${encodeURIComponent(selectedTime)}`)
+    if (selectedTheater && selectedTime && selectedDate) {
+      // Assuming movie has an array of all showtimes
+      // First filter showtimes by theater ID
+      const theaterShowtimes = showtimes?.filter(
+        showtime => showtime.theatreId === selectedTheater.id
+      );
+
+      console.log(theaterShowtimes)
+      
+      if (theaterShowtimes && theaterShowtimes.length > 0) {
+        // Extract the year from the showtime.startTime
+        const showtimeYear = new Date(theaterShowtimes[0].startTime).getFullYear();
+        
+        // Parse your selectedDate properly
+        const dateParts = selectedDate.split(', ');
+        const monthStr = dateParts[1].substring(0, 3);
+        const day = parseInt(dateParts[1].substring(4));
+        
+        // Convert month abbreviation to month number (0-based in JavaScript)
+        const months = {
+          "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, 
+          "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+        };
+        const month = months[monthStr];
+        
+        // Parse time
+        const isPM = selectedTime.includes('PM');
+        let [hours, minutes] = selectedTime.replace(' AM', '').replace(' PM', '').split(':');
+        hours = parseInt(hours);
+        
+        // Convert to 24-hour format
+        if (isPM && hours < 12) {
+          hours += 12;
+        } else if (!isPM && hours === 12) {
+          hours = 0;
+        }
+        
+        // Create date object with correct year
+        const showtimeDate = new Date(showtimeYear, month, day, hours, parseInt(minutes));
+        
+        const selectedShowtime = theaterShowtimes.find(showtime => {
+          const startTime = new Date(showtime.startTime);
+          return startTime.getTime() === showtimeDate.getTime();
+        });
+
+        console.log(selectedShowtime)
+        
+        if (selectedShowtime) {
+          navigate(`/seat-selection?movieId=${id}&theatreId=${selectedTheater.id}&showtimeId=${selectedShowtime.id}`);
+        } else {
+          alert("Selected showtime not found. Please try again.");
+        }
+      } else {
+        alert("No showtimes available for this theater. Please select another theater.");
+      }
     } else if (!selectedTheater) {
-      alert("Please select a theater first")
+      alert("Please select a theater first");
     } else {
-      alert("Please select a show time")
+      alert("Please select a show time");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -358,26 +391,45 @@ const fetchShowtimesForTheaters = async (theatres, movieId, token) => {
                           className="mt-4 pt-4 border-t border-gray-700"
                         >
                           <h4 className="font-medium mb-2 text-sm">Available Show Times:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {theater.showTimings.map((time, index) => (
-                              <motion.button
-                                key={index}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedTime(time)
-                                }}
-                                className={`py-1 px-3 rounded-full text-sm transition-all ${
-                                  selectedTime === time
-                                    ? "bg-red-500 text-white"
-                                    : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                                }`}
-                              >
-                                {time}
-                              </motion.button>
-                            ))}
-                          </div>
+                          
+                          {/* Group showtimes by date */}
+                          {(() => {
+                            // Group showtimes by date
+                            const groupedByDate = theater.showTimings.reduce((acc, showtime) => {
+                              if (!acc[showtime.date]) {
+                                acc[showtime.date] = [];
+                              }
+                              acc[showtime.date].push(showtime);
+                              return acc;
+                            }, {});
+                            
+                            return Object.entries(groupedByDate).map(([date, showtimes]) => (
+                              <div key={date} className="mb-4">
+                                <h5 className="text-sm font-medium text-gray-300 mb-2">{date}</h5>
+                                <div className="flex flex-wrap gap-2">
+                                  {showtimes.map((showtime, index) => (
+                                    <motion.button
+                                      key={index}
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedTime(showtime.time);
+                                        setSelectedDate(showtime.date);
+                                      }}
+                                      className={`py-1 px-3 rounded-full text-sm transition-all ${
+                                        selectedTime === showtime.time && selectedDate === showtime.date
+                                          ? "bg-red-500 text-white"
+                                          : "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                                      }`}
+                                    >
+                                      {showtime.time}
+                                    </motion.button>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          })()}
                         </motion.div>
                       )}
                     </motion.div>
@@ -417,6 +469,12 @@ const fetchShowtimesForTheaters = async (theatres, movieId, token) => {
                     <div className="flex justify-between">
                       <span className="text-gray-300">Theater:</span>
                       <span>{selectedTheater.name}</span>
+                    </div>
+                  )}
+                  {selectedDate && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Date:</span>
+                      <span>{selectedDate}</span>
                     </div>
                   )}
                   {selectedTime && (

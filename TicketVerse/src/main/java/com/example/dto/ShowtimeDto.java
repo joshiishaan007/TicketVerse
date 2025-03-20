@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public class ShowtimeDto {
 
+    private Long id;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Double ticketPrice;
@@ -45,6 +46,14 @@ public class ShowtimeDto {
 
     //Getters and setters
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getScreenType() {
         return screenType;

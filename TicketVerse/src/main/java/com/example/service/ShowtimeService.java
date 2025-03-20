@@ -40,6 +40,30 @@ public class ShowtimeService {
                 .collect(Collectors.toList());
     }
 
+    public void reserveSeat(Long showtimeId, Long seatId){
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with id: " + showtimeId));
+
+        ShowtimeSeat showtimeSeat = showtimeSeatRepository.findById(seatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime seat not found with id: " + seatId));
+
+        showtimeSeat.setStatus(SeatStatus.RESERVED);
+
+        showtimeSeatRepository.save(showtimeSeat);
+    }
+
+    public void releaseSeat(Long showtimeId, Long seatId){
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with id: " + showtimeId));
+
+        ShowtimeSeat showtimeSeat = showtimeSeatRepository.findById(seatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime seat not found with id: " + seatId));
+
+        showtimeSeat.setStatus(SeatStatus.AVAILABLE);
+
+        showtimeSeatRepository.save(showtimeSeat);
+    }
+
     public ShowtimeDto getShowtimeById(Long showtimeId) {
         Showtime showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with id: " + showtimeId));
@@ -202,6 +226,7 @@ public class ShowtimeService {
 
     private ShowtimeDto convertToDTO(Showtime showtime) {
         ShowtimeDto dto = new ShowtimeDto();
+        dto.setId(showtime.getId());
         dto.setStartTime(showtime.getStartTime());
         dto.setEndTime(showtime.getEndTime());
         dto.setTicketPrice(showtime.getTicketPrice());

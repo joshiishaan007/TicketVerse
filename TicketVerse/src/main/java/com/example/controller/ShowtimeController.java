@@ -69,6 +69,16 @@ public class ShowtimeController {
         return new ResponseEntity<>(showtimeService.createShowtime(request), HttpStatus.CREATED);
     }
 
+    @PostMapping("/{showtimeId}/seats/{seatId}/reserve")
+    public void reserveSeat(@PathVariable Long showtimeId, @PathVariable Long seatId){
+        showtimeService.reserveSeat(showtimeId,seatId);
+    }
+
+    @PostMapping("/{showtimeId}/seats/{seatId}/release")
+    public void releaseSeat(@PathVariable Long showtimeId, @PathVariable Long seatId){
+        showtimeService.releaseSeat(showtimeId,seatId);
+    }
+
     @PutMapping("/{showtimeId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ShowtimeDto> updateShowtime(
